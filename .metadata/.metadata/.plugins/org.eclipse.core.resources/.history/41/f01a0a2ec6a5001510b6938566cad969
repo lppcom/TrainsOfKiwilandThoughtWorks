@@ -1,0 +1,24 @@
+package com.kiwilandtrains.core;
+
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+
+public class Path {
+
+	// list should maintain insertion order. this is essential
+	LinkedHashSet<CityVertex> nodeList;
+	
+	public Path() {
+		nodeList = new LinkedHashSet<CityVertex>();
+	}
+	
+	public void createPath(HashMap<String, String> cityPrevMap, CityVertex current) {
+		while(cityPrevMap[current.getName()] != null) {
+			
+		}
+	}
+	
+	public String getPathDesc() {
+		return "";
+	}
+}

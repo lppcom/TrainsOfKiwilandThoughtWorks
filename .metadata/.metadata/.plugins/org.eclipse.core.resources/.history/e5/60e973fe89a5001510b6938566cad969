@@ -1,0 +1,13 @@
+package com.kiwilandtrains.core;
+
+public class CityNode {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

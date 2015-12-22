@@ -1,0 +1,22 @@
+package com.kiwilandtrains.core;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+
+public class Path {
+
+	// list should maintain insertion order. this is essential
+	LinkedHashSet<CityVertex> nodeList;
+	
+	public Path() {
+		nodeList = new LinkedHashSet<CityVertex>();
+	}
+	
+	public void addCityVertex(CityVertex cv) {
+		nodeList.add(cv);
+	}
+	
+	public String getPathDesc() {
+		return "";
+	}
+}

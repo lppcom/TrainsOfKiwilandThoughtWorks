@@ -1,0 +1,34 @@
+package com.kiwilandtrains.test.graph;
+
+import com.kiwilandtrains.manager.CityGraphManager;
+
+import junit.framework.TestCase;
+
+public class TestGraph extends TestCase {
+
+	public void testEdgeExists() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		assertNotNull("This" +" AD " + "edge already exists in " + graphData, CityGraphManager.getInstance().getCityGraph().getEdgeBetween("A", "D"));
+		assertNull("This" +" DA " + "edge not exists in " + graphData, CityGraphManager.getInstance().getCityGraph().getEdgeBetween("D", "A"));
+	}
+	
+	public void testGraphEmpty() {
+		String graphData =  "";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		assertEquals("Graph should not have a vertex: ", true, CityGraphManager.getInstance().getCityGraph().isEmpty());
+	}
+	
+	public void testAddEdge() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		int size = CityGraphManager.getInstance().getCityGraph().getSetOfEdges().size();			
+		CityGraphManager.getInstance().getCityGraph().addEdge(10, "C", "A");
+		
+		assertEquals("Graph new size is one more than " + size, true, (CityGraphManager.getInstance().getCityGraph().getSetOfEdges().size() == size));
+	}
+		
+}

@@ -1,0 +1,49 @@
+package com.kiwilandtrains.main;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import com.kiwilandtrains.manager.CityGraphManager;
+
+public class Starter {
+	
+	public static String INPUT_FILE_NAME = "input.txt";
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		// grab the inout and init the city graph with possible routes
+		String graphData =  "AB3, AE8, AC2, AG1, GE1, BE2, CF1, FE1, EF1, AD4";
+		CityGraphManager.getInstance().initGraph(graphData);
+				
+				
+	}
+	
+	public static String readInputFromFile(String path) {
+		
+		String input = "";
+		
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(INPUT_FILE_NAME));			
+			String line = null;
+			while((line = reader.readLine()) != null) {
+				input += line;
+			}
+			
+			return input;
+		} catch (FileNotFoundException e) {			
+			e.printStackTrace();
+			System.out.println("No such file: " + INPUT_FILE_NAME);
+		} catch (IOException e) {			
+			e.printStackTrace();
+			System.out.println("io exception while reading: " + INPUT_FILE_NAME);
+		}
+		
+		return input;
+	}
+
+}

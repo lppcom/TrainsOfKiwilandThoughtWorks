@@ -1,0 +1,79 @@
+package com.kiwilandtrains.core;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+
+import com.kiwilandtrains.manager.CityGraphManager;
+
+/**
+ * 
+ * Desc: Class to represent path between two vertices
+ * 
+ * @author zekigu
+ *
+ */
+public class Path {
+
+	// list should maintain insertion order. this is essential
+	ArrayList<CityVertex> mNodeList;
+	
+	public Path() {
+		mNodeList = new ArrayList<CityVertex>();		
+	}
+	
+	public Path(Path p) {
+		ArrayList<CityVertex> pathListOfp = p.getNodeList();
+		mNodeList = new ArrayList<CityVertex>(pathListOfp);			
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to create and return path recursively by looking prevmap
+	 * 
+	 * @param cityPrevMap
+	 * @param current
+	 */
+	public void createPath(HashMap<String, String> cityPrevMap, CityVertex current) {
+		
+		// add to nodelist of path
+		mNodeList.add(current);
+		
+		// base case
+		if(cityPrevMap.get(current.getName()) != null) {
+			String prevVertexStr = cityPrevMap.get(current.getName());
+			CityVertex prevVertex = CityGraphManager.getInstance().getCityGraph().getVertex(prevVertexStr);			
+			createPath(cityPrevMap, prevVertex);
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Returns path description as A-B-C..
+	 * 
+	 * @return
+	 */
+	public String getPathDesc() {
+
+		String path = "";
+		for(int i=0; i<mNodeList.size();i++){
+			if(i == mNodeList.size()-1) {
+				path += mNodeList.get(i).getName();
+			} else {
+				path += mNodeList.get(i).getName() + "-";
+			}
+		}
+		
+		return path;
+	}
+	
+	
+	public ArrayList<CityVertex> getNodeList() {
+		return mNodeList;
+	}
+
+	public void setNodeList(ArrayList<CityVertex> nodeList) {
+		this.mNodeList = nodeList;
+	}
+
+}

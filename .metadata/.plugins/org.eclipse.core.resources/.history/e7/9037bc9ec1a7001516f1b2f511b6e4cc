@@ -1,0 +1,12 @@
+package com.kiwilandtrains.test.graph;
+
+public class TestGraphUtils {
+
+	public void testFindShortest() {
+		
+	}
+	
+	public void testFindPathCount() {
+		
+	}
+}

@@ -1,0 +1,17 @@
+package com.kiwilandtrains.main;
+
+import com.kiwilandtrains.manager.CityGraphManager;
+
+public class Starter {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		// grab the inout and init the city graph with possible routes
+		String graphData =  "AB3, AE8, AC2, AG3, GE1, BE2, CF3, FE1, AD4";
+		CityGraphManager.getInstance().initGraph(graphData);
+	}
+
+}

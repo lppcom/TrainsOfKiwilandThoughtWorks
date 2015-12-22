@@ -1,0 +1,20 @@
+package com.kiwilandtrains.test.graph;
+
+import junit.framework.TestCase;
+
+public class TestGraph extends TestCase {
+
+	public void testEdgeExists() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		
+	}
+	
+	public void testGraphEmpty() {
+		
+	}
+	
+	public void testAddEdge() {
+		
+	}
+		
+}

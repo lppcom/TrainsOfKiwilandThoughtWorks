@@ -1,0 +1,7 @@
+package com.kiwilandtrains.vertexAndedge;
+
+import junit.framework.TestCase;
+
+public class TestVertexAndEdge extends TestCase {
+
+}

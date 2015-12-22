@@ -1,0 +1,597 @@
+package com.kiwilandtrains.core;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * 
+ * Desc: The graph imp. with adjacent list. We don't need remove operation for this particular assignment.
+ * 
+ * @author zekigu
+ *
+ */
+public class CityGraph {
+
+	private int MAX_ARBITRARY_INTEGER_VALUE = 1000000;
+	private HashMap<CityVertex, List<CityVertex>> mCityVertexAdjListMap = null;
+	private Map<CityVertex, ArrayList<Path>> mCityPathListMap = new ConcurrentHashMap<CityVertex, ArrayList<Path>>();
+	private HashSet<RouteEdge> mSetOfEdges = null;
+	private LinkedHashSet<CityVertex> mSetOfVertex = null;
+	
+	public CityGraph(boolean isDirected) {
+		mCityVertexAdjListMap = new HashMap<CityVertex, List<CityVertex>>();
+		mSetOfEdges = new HashSet<RouteEdge>();
+		mSetOfVertex = new LinkedHashSet<CityVertex>();		
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to populate the graph with edges & vertices
+	 * 
+	 * @param edge
+	 */
+	public void addEdge(int dist, String srcVertex, String destVertex) {
+		if(srcVertex != null &&
+				destVertex != null) {
+			
+			// if there's no edge between two vertices
+			if(getEdgeBetween(srcVertex, destVertex) == null) {
+								
+				// get vertices of an edge
+				CityVertex src = getVertex(srcVertex, true);
+				CityVertex dest = getVertex(destVertex, true);			
+						
+				// grab src vertex adj list & create if necessary
+				List<CityVertex> adjSrc = mCityVertexAdjListMap.get(src);				
+				if(adjSrc == null) {
+					adjSrc = src.getAdjacentCities();
+				}
+							
+				// add the destination vertex to the adj list of src
+				adjSrc.add(dest);
+				mCityVertexAdjListMap.put(src, adjSrc);
+				
+				// create & add the corresponding edge 
+				RouteEdge routeEdge = new RouteEdge(dist, src, dest);
+				mSetOfEdges.add(routeEdge);
+				
+				// Note: If graph was NOT directed, we had to do the similar operation we did for src vertex 
+			} else {
+				System.out.print("Edge already exists.");
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * Desc: We don't need removal op. Thus we left here empty & private
+	 * 
+	 * @param src
+	 * @param dest
+	 */
+	private void removeEdge(CityVertex src, CityVertex dest) {
+		// left empty
+	}
+	
+	/**
+	 * 
+	 * Desc: Find the edge between two vertices
+	 * 
+	 * @param src
+	 * @param dest
+	 * @return
+	 */
+	public RouteEdge getEdgeBetween(String src, String dest) {
+		RouteEdge edge = null;
+		
+		// iterate over the edge set to find the exact match
+		for(RouteEdge re : mSetOfEdges){
+			if(re.getSrcVertex().getName().equalsIgnoreCase(src) && 
+					re.getDestVertex().getName().equalsIgnoreCase(dest)) {
+				edge = re;
+			}
+		}
+		
+		return edge;
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to check if graph is empty or not
+	 * 
+	 * @return
+	 */
+	public boolean isEmpty() {
+		return (mSetOfEdges.size() == 0);
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to get vertex if exists, or create new one
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public CityVertex getVertex(String name, boolean createNew) {
+		
+		CityVertex vertex = null;
+		
+		// iterate over existing vertices to see any match
+		for(CityVertex v : mSetOfVertex) {
+			if(v.getName().equalsIgnoreCase(name)){
+				vertex = v;
+				break;
+			}
+		}
+		
+		// if no match, create & add new one
+		if(createNew) {
+			if(vertex == null) {
+				vertex = new CityVertex(name);
+				mSetOfVertex.add(vertex);
+			}
+		}
+		
+		return vertex;
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to search graph recursively. Also known as notorious DFS
+	 * 
+	 * @param curVertex
+	 * @param searchedVertex
+	 * @return
+	 */
+	private HashSet<String> traversed = new HashSet<String>();
+	public boolean DFSearch(CityVertex curVertex, String searchedVertex) {
+		
+		if(curVertex != null) {
+			
+			// add it to traversed set
+			traversed.add(curVertex.getName());
+			
+			// return true if found
+			if(searchedVertex.equalsIgnoreCase(curVertex.getName())){
+				return true;
+			}
+					
+			// iterate over the adjacent items
+			for(CityVertex adjVertex : curVertex.getAdjacentCities()){
+				if(!traversed.contains(adjVertex.getName())) {
+					return DFSearch(adjVertex, searchedVertex);
+				}
+			}
+			
+			return false;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Helper method to perform searching. Just to clear hash set prior to search 
+	 * 
+	 * @param curVertex
+	 * @param searchedVertex
+	 */
+	public boolean searchWithDFS(CityVertex curVertex, String searchedVertex) {
+		traversed.clear();
+		return DFSearch(curVertex, searchedVertex);
+	}
+		
+	public boolean isConnected(CityVertex to, CityVertex from) {
+		return searchWithDFS(to, from.getName());
+	}
+
+	/**
+	 * 
+	 * Desc: Main method to find all possible and shortest paths from pivot to any other city/vertex
+	 * 
+	 * @param pivot
+	 */
+	public void findShortestPaths(CityVertex pivot) {
+		
+		// create city-shortestdistance & vertexPrev maps
+		final HashMap<String, Integer> cityDistanceMap = new HashMap<String, Integer>(); // real shortest paths
+		final HashMap<String, String> cityPrevMap = new HashMap<String, String>(); // to monitor traces to the shortest path
+		
+		// put pivot to the beginning
+		putPivotToTheBeginning(pivot);
+		
+		// pick one vertex as a start vertex & start it's distance to 0
+		CityVertex start = mSetOfVertex.iterator().next();
+		cityDistanceMap.put(start.getName(), 0);
+		
+		// create a processing queue
+		ArrayList<CityVertex> processingQueue = new ArrayList<CityVertex>();
+				
+		// set their initial distance & previous city. add them into the proc queue 
+		for(CityVertex v : getSetOfVertex()){
+			if(!v.getName().equalsIgnoreCase(start.getName())) {
+				cityDistanceMap.put(v.getName(), MAX_ARBITRARY_INTEGER_VALUE);				
+			}
+			
+			cityPrevMap.put(v.getName(), null);
+			processingQueue.add(v);
+		}		
+		
+		// sort the proc queue
+		processingQueue = sortProcessingQueue(processingQueue, cityDistanceMap);
+											
+		// iterate over the proc queue
+		while(!processingQueue.isEmpty()) {
+			
+			// grab the item with min distance
+			CityVertex srcCity = processingQueue.remove(0);
+			
+			System.out.println("Proc queue enq: " + srcCity.getName());
+			if()
+			
+			// for each adjacent ciry of src, find all distanced from src 
+			for(CityVertex adjCity : srcCity.getAdjacentCities()){			
+				
+				// grab the unique city names to use them in distance calculation
+				String adjCityName = adjCity.getName();
+				String srcCityName = srcCity.getName();				
+				int value = cityDistanceMap.get(srcCityName) + 
+						getEdgeBetween(srcCityName, adjCityName).getDistance();				
+				
+				// check if the value less then most previously saved min value
+				// this is where you save the shortest paths
+				if(value < cityDistanceMap.get(adjCityName)) {
+					cityDistanceMap.put(adjCityName, value);
+					cityPrevMap.put(adjCityName, srcCityName);
+				}								
+		
+				// add all possible paths from src to adj  
+				addToPathList(adjCity, srcCity, pivot, cityPrevMap);
+			}
+			
+			// sort the proc queue
+			processingQueue = sortProcessingQueue(processingQueue, cityDistanceMap);			
+		}			
+		
+		// test all paths are printed correctly from pivot to all cities/vertices
+		for(CityVertex cv : mSetOfVertex) {
+			ArrayList<Path> list = mCityPathListMap.get(cv);
+			
+			for(int i=0; i<list.size(); i++) {
+				//System.out.println("Path desc: " + list.get(i).getPathDesc());
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to add paths belong to the dest vertex. Start from looking src vertex's path(s)
+	 * 
+	 * @param dest
+	 * @param src
+	 * @param cityPrevMap
+	 */
+	private void addToPathList(CityVertex dest, CityVertex src, CityVertex pivot, HashMap<String, String> cityPrevMap) {
+		
+		// add to path list by first pivoting the src 
+		addToPathListBySource(dest, src, pivot, cityPrevMap);		
+				
+		// add to path list by first pivoting the dest 
+		addToPathListByDest(dest, pivot, cityPrevMap);		
+	}
+	
+	/**
+	 * 
+	 * Desc: See addToPathList method
+	 * 
+	 * @param dest
+	 * @param src
+	 * @param cityPrevMap
+	 */
+	private void addToPathListBySource(CityVertex dest, CityVertex src, CityVertex pivot, HashMap<String, String> cityPrevMap) {
+
+		// grab path lists ending @ src
+		ArrayList<Path> pathsOfSrcTemp = GraphUtils.getPathListToVertexFromPivot(src, pivot, mCityPathListMap);
+		
+		// grab the path list of dest
+		ArrayList<Path> pathsToDest = GraphUtils.getPathListToVertexFromPivot(dest, pivot, mCityPathListMap);
+		ArrayList<Path> pathsToDestAlias = new ArrayList<Path>(pathsToDest);
+		
+		// if src path list's size is bigger than 0
+		if(pathsOfSrcTemp.size() > 0) {
+				
+			// create path from src vertex's paths
+			for(int i=0; i<pathsOfSrcTemp.size(); i++) {
+				
+				// retreive paths of src vertex one by one
+				Path srcPath = pathsOfSrcTemp.get(i);
+
+				// get last index of (first of unordered node list) to check starting & ending cities/vertices
+				int lastIndex = srcPath.getNodeList().size() -1;
+								
+				// check if it's a cyclic
+				if(srcPath.getNodeList().get(lastIndex) == dest) {				
+					continue;
+				} else {
+				
+					// if dest path list is not zero, do the math
+					if(pathsToDestAlias.size() > 0) {
+						
+						// iterate over the paths of dest vertex
+						for(int j=0; j<pathsToDestAlias.size(); j++) {
+							
+							// grab the ordered string of last dest + src to check if it's repeated before 
+							// or a city to be repeated in a row
+							String lastCityOfSrc = src.getName();
+							String combinationOfLastTwoCityAsStr = lastCityOfSrc + dest.getName();							
+							if(!srcPath.getPathOriginalOrderAsAString().contains(combinationOfLastTwoCityAsStr)) {								
+								if(!lastCityOfSrc.equals(dest.getName())) {
+									Path p = srcPath;
+									Path newPath = new Path(p);			
+									
+									// insert this dest into the beginning of the list (not ordered yet)
+									newPath.getNodeList().add(0, dest);
+										
+									// add the path to the path list. this list
+									ArrayList<Path> origListOfPivot = mCityPathListMap.get(pivot);
+									if(!GraphUtils.listContainsPath(origListOfPivot, newPath)) {										 
+										origListOfPivot.add(newPath);
+									}
+									
+									// add path to the list. update the vertex-path list
+									mCityPathListMap.put(pivot, origListOfPivot);	
+								}
+							}
+						}
+					} else {	
+						// create a path
+						createAndAddPath(srcPath, dest, pivot, cityPrevMap);
+					}
+				}
+			}				
+		} else {		
+			// create a path
+			createAndAddPath(null, dest, pivot, cityPrevMap);
+		}				
+	}	
+	
+	/**
+	 * 
+	 * Desc: See above. For this method to work properly, addToPathListBySource has to be called in the first place
+	 * 		 This method is used find out any other (missed) paths from the addToPathListBySource method.
+	 * 		 See README for more explanation.
+	 * 
+	 * @param dest
+	 */
+	private void addToPathListByDest(CityVertex src, CityVertex pivot, HashMap<String, String> cityPrevMap) {
+
+		// grab path lists ending @ src
+		ArrayList<Path> pathsOfSrcTemp = GraphUtils.getPathListToVertexFromPivot(src, pivot, mCityPathListMap);
+		
+		// for each adj of that dest vertex
+		for(CityVertex adj : src.getAdjacentCities()) {			
+			
+			// get path list of adj
+			ArrayList<Path> adjPathList = GraphUtils.getPathListToVertexFromPivot(adj, pivot, mCityPathListMap);
+			ArrayList<Path> adjPathListAlias = new ArrayList<Path>(adjPathList);
+			
+			// create path from src vertex's paths
+			for(int i=0; i<pathsOfSrcTemp.size(); i++) {
+				
+				// retreive paths of src vertex one by one
+				Path destPath = pathsOfSrcTemp.get(i);
+			
+				// if src path list's size is bigger than 0
+				if(adjPathListAlias.size() > 0) {
+					
+					// get last index of (first of unordered node list) to check starting & ending cities/vertices
+					int lastIndex = destPath.getNodeList().size() -1;										
+					if(destPath.getNodeList().get(lastIndex) == adj) {				
+						continue;
+					} else {
+											
+						// grab the ordered string of last dest + src to check if it's repeated before
+						String lastCityOfSrc = src.getName();
+						String combinationOfLastTwoCityAsStr = lastCityOfSrc + adj.getName();
+						
+						if(!destPath.getPathOriginalOrderAsAString().contains(combinationOfLastTwoCityAsStr)) {		
+							
+							if(!lastCityOfSrc.equals(adj.getName())) {
+												
+								Path p = destPath;
+								Path newPath = new Path(p);			
+								
+								// insert this dest into the beginning of the list (not ordered yet)
+								newPath.getNodeList().add(0, adj);
+									
+								// add the path to the path list. this list
+								ArrayList<Path> origListOfPivot = mCityPathListMap.get(pivot);
+								if(!GraphUtils.listContainsPath(origListOfPivot, newPath)) {										 
+									origListOfPivot.add(newPath);
+								}
+								
+								// add path to the list. update the vertex-path list
+								mCityPathListMap.put(pivot, origListOfPivot);								
+							}
+						}
+											
+					}
+				} else {
+				
+					createAndAddPath(destPath, adj, pivot, cityPrevMap);
+				}
+			}			
+		}			
+	}
+	
+	/**
+	 * 
+	 * Desc: Simple method to create & add path when traversing the graph
+	 * 
+	 * @param srcPath
+	 * @param dest
+	 * @param pivot
+	 * @param cityPrevMap
+	 */
+	private void createAndAddPath(Path srcPath, CityVertex dest, CityVertex pivot, HashMap<String, String> cityPrevMap ) {
+		// create new path from start
+		if(srcPath == null) {
+			Path p = new Path();
+			
+			// add to nodelist of path
+			p.getNodeList().add(dest);
+			p.createPath(cityPrevMap, dest);
+			
+			// add the path to the path list. this list 
+			ArrayList<Path> origListOfPivot = mCityPathListMap.get(pivot);																 
+			origListOfPivot.add(p);
+									
+			// add path to the list. update the vertex-path list
+			mCityPathListMap.put(pivot, origListOfPivot);
+		} else {
+			Path p = srcPath;
+			Path newPath = new Path(p);			
+			
+			// insert this dest into the beginning of the list (not ordered yet)
+			newPath.getNodeList().add(0, dest);						
+			
+			// add the path to the path list. this list
+			ArrayList<Path> origListOfPivot = mCityPathListMap.get(pivot);																 
+			origListOfPivot.add(newPath);
+									
+			// add path to the list. update the vertex-path list
+			mCityPathListMap.put(pivot, origListOfPivot);	
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to perform final pass. Unfortunately, this is not an efficient method.  
+	 * 
+	 */
+	public void addRemainingPaths() {
+				
+		// for each vertex
+		for(CityVertex src : mSetOfVertex) {
+			ArrayList<Path> pathListSrc = mCityPathListMap.get(src);			
+			// for each adj of that vertex
+			for(CityVertex adj : src.getAdjacentCities()) {				
+				ArrayList<Path> adjPathList = mCityPathListMap.get(adj);
+				
+				// check if adj vertex's path list includes paths of src v
+				for(Path p : adjPathList) {
+					
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to return & print out paths of a given vertex
+	 * 
+	 * @param v
+	 * @return
+	 */
+	public String printCityPathsByVertex(CityVertex v) {
+		String paths = "";
+		
+		// if there's a path list assigned for the vertex 
+		if(mCityPathListMap.get(v) != null) {
+			ArrayList<Path> pathList = mCityPathListMap.get(v);
+			System.out.println("total path count of " + v.getName() + ": " + pathList.size());
+			
+			// iterate over the paths to print out each path route
+			for(int i=0; i<pathList.size(); i++) {
+				Path p = pathList.get(i);
+				paths += p.getPathDesc() + "\n";
+			}			
+		}
+		return paths;
+	}		
+	
+	/**
+	 * 
+	 * Desc: Method to sort proc queue so that each time the min element is chosen
+	 * 
+	 * @param processingQueue
+	 * @param cityDistanceMap
+	 * @return
+	 */
+	public ArrayList<CityVertex> sortProcessingQueue(ArrayList<CityVertex> processingQueue, final HashMap<String, Integer> cityDistanceMap) {
+		processingQueue.sort(new Comparator<CityVertex>() {
+
+			public int compare(CityVertex arg0, CityVertex arg1) {		
+				return (cityDistanceMap.get(arg0.getName()) - cityDistanceMap.get(arg1.getName()));
+			}
+		});
+		
+		return processingQueue;
+	}
+	
+	/**
+	 * 
+	 * Desc: Initial set-up of the map
+	 * 
+	 */
+	public void populateCityPathListMap() {
+		for(CityVertex v : mSetOfVertex) {
+			mCityPathListMap.put(v, new ArrayList<Path>());
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to re-order (re-populate) vertex hash with the specified pivot
+	 * 
+	 * @param pivot
+	 */
+	public void putPivotToTheBeginning(CityVertex pivot) {
+		
+		// gather items into the list
+		ArrayList<CityVertex> vertexList = new ArrayList<CityVertex>();		
+		Iterator<CityVertex> it = mSetOfVertex.iterator();
+		while(it.hasNext()) {
+			CityVertex cv = it.next();
+			if(cv.getName().equals(pivot.getName())) {
+				vertexList.add(0, cv);
+			} else {
+				vertexList.add(cv);
+			}
+		}
+				
+		// clear the hash set to re-populate with the ordered items
+		mSetOfVertex.clear();				
+		for(int i=0; i<vertexList.size(); i++) {		
+			mSetOfVertex.add(vertexList.get(i));
+		}
+				
+		// clear vertexList not to leak vertices
+		vertexList.clear();
+	}
+	
+	public HashSet<CityVertex> getSetOfVertex() {
+		return mSetOfVertex;
+	}
+
+	public void setSetOfVertex(LinkedHashSet<CityVertex> mSetOfVertex) {
+		this.mSetOfVertex = mSetOfVertex;
+	}
+	
+	
+	public HashSet<RouteEdge> getSetOfEdges() {
+		return mSetOfEdges;
+	}
+
+	public void setSetOfEdges(HashSet<RouteEdge> mSetOfEdges) {
+		this.mSetOfEdges = mSetOfEdges;
+	}
+
+}

@@ -1,0 +1,104 @@
+package com.kiwilandtrains.manager;
+
+import java.security.spec.MGF1ParameterSpec;
+import java.util.Scanner;
+
+import com.kiwilandtrains.core.CityGraph;
+import com.kiwilandtrains.core.CityVertex;
+import com.kiwilandtrains.core.RouteEdge;
+
+/**
+ * 
+ * Desc: Class to manage graph issues like init, adding etc. 
+ * 
+ * @author zekigu
+ *
+ */
+public class CityGraphManager {
+
+	public static CityGraphManager mCityGraphManager;
+	private CityGraph mCityGraph;
+	
+	private CityGraphManager() {
+		
+	}
+	
+	public static CityGraphManager getInstance() {
+		if(mCityGraphManager == null) {
+			mCityGraphManager = new CityGraphManager();
+		}
+		
+		return mCityGraphManager;
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to initiate city route graph
+	 * 
+	 * @param graphData
+	 */
+	public void initGraph(String graphData, String start) {
+		
+		// create the graph object
+		mCityGraph = new CityGraph(true);		
+		
+		// if data is OK - ie not null
+		if(graphData != null && !graphData.equals("")) {					
+			String[] edgeArray = graphData.split(", ");
+			
+			// iterate over the splitted data
+			for(int i=0; i<edgeArray.length; i++) {
+				String edge = edgeArray[i];
+				edge = edge.trim();								
+				
+				// edge params
+				String src = "";
+				String dest = "";
+				int dist = 0;
+				
+				// iterate over the edge string to find out src, dest and weight 
+				for(int j=0; j<edge.length();j++) {
+					if(j == 0) {
+						src = String.valueOf(edge.charAt(j));
+					} else if(j == 1) {
+						dest = String.valueOf(edge.charAt(j));
+					} else if(j == 2) {
+						dist = Integer.parseInt(String.valueOf(edge.charAt(j)));
+					}
+				}		
+
+				createVerticesAndEdge(dist, src, dest);
+			}				
+		} else {
+			System.out.print("Error when parsing graph data. Please check your graph input.");
+		}
+		
+		// populate the city map hash 
+		mCityGraph.populateCityPathListMap();
+		
+		// test
+		mCityGraph.findShortestPaths(mCityGraph.getVertex(start, false));
+	}
+
+	/**
+	 * 
+	 * Desc: Method to create vertices and corresponding edge with given (parsed) edge data
+	 * 
+	 * @param dist
+	 * @param srcVertex
+	 * @param destVertex
+	 */
+	public void createVerticesAndEdge(int dist, String srcVertex, String destVertex) {				
+		// add them all to the graph
+		mCityGraph.addEdge(dist, srcVertex, destVertex);
+	}
+	
+	
+	public CityGraph getCityGraph() {
+		return mCityGraph;
+	}
+
+	public void setCityGraph(CityGraph mCityGraph) {
+		this.mCityGraph = mCityGraph;
+	}	
+}

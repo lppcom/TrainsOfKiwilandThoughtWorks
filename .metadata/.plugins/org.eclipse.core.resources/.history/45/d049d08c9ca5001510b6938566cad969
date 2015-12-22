@@ -1,0 +1,25 @@
+package com.kiwilandtrains.test.graph;
+
+import com.kiwilandtrains.manager.CityGraphManager;
+
+import junit.framework.TestCase;
+
+public class TestGraph extends TestCase {
+
+	public void testEdgeExists() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+				
+		assertEquals("This" +"AS" + "edge already exists in " + graphData + ": " + true, CityGraphManager.getInstance().getCityGraph().getEdgeBetween("A", "S"));
+		assertEquals("This" +"DA" + "edge not exists in " + graphData + ": " + false, CityGraphManager.getInstance().getCityGraph().getEdgeBetween("D", "A"));
+	}
+	
+	public void testGraphEmpty() {
+		
+	}
+	
+	public void testAddEdge() {
+		
+	}
+		
+}

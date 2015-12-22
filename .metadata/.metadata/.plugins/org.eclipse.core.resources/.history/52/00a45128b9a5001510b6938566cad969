@@ -1,0 +1,38 @@
+package com.kiwilandtrains.core;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class CityVertex implements Comparable<Integer>{
+
+	private String mName;
+	private ArrayList<CityVertex> mAdjacentCities;
+	
+	public CityVertex(String name) {
+		mName = name;
+		mAdjacentCities = new ArrayList<CityVertex>();
+	}
+
+	public String getName() {
+		return mName;
+	}
+
+	public void setName(String mName) {
+		this.mName = mName;
+	}
+
+	public ArrayList<CityVertex> getAdjacentCities() {
+		return mAdjacentCities;
+	}
+
+	public void setAdjacentCities(ArrayList<CityVertex> mAdjacentCities) {
+		this.mAdjacentCities = mAdjacentCities;
+	}
+
+	public int compareTo(T arg0) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	
+}

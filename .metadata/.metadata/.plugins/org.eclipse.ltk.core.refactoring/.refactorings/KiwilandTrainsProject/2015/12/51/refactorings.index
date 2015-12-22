@@ -1,0 +1,6 @@
+1450444745397	Move compilation unit
+1450444780298	Rename type 'CityNode'
+1450445273889	Encapsulate field 'mDestVertex'
+1450445281477	Encapsulate field 'mSrcVertex'
+1450445287181	Encapsulate field 'mDistance'
+1450449455257	Encapsulate field 'mSetOfVertex'

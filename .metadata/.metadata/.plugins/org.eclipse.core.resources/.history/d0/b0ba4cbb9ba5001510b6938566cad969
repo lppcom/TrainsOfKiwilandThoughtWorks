@@ -1,0 +1,19 @@
+package com.kiwilandtrains.test.graph;
+
+import junit.framework.TestCase;
+
+public class TestGraph extends TestCase {
+
+	public void testEdgeExists() {
+		
+	}
+	
+	public void testGraphEmpty() {
+		
+	}
+	
+	public void testAddEdge() {
+		
+	}
+		
+}

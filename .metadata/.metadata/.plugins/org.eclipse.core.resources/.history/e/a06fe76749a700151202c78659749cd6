@@ -1,0 +1,65 @@
+package com.kiwilandtrains.test.inputs;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
+import com.kiwilandtrains.core.GraphUtils;
+import com.kiwilandtrains.manager.CityGraphManager;
+
+public class testInputsFromOneToFive extends TestCase {
+
+	// The distance of the route A-B-C.
+	public void testInputOne() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData, "A");
+		
+		String route = "A-B-C";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 9));
+	}
+	
+	// The distance of the route A-D.
+	public void testInputTwo() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData, "A");
+		
+		String route = "A-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 5));
+	}
+	
+	// The distance of the route A-D.
+	public void testInputThree() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData, "A");
+		
+		String route = "A-D-C";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 5));
+	}
+	
+	// The distance of the route A-D-C.
+	public void testInputFour() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData, "A");
+		
+		String route = "A-E-B-C-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 5));
+	}	
+	
+	// The distance of the route A-E-B-C-D.
+	public void testInputFive() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData, "A");
+		
+		String route = "A-E-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 5));
+	}	
+}

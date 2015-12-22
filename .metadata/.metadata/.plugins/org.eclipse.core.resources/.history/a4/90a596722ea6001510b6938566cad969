@@ -1,0 +1,304 @@
+package com.kiwilandtrains.core;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.PriorityQueue;
+
+/**
+ * 
+ * Desc: The graph imp. with adjacen list. We don't need remove operation for this particular assignment.
+ * 
+ * @author zekigu
+ *
+ */
+public class CityGraph {
+
+	private boolean mIsDirected;
+	private int MAX_ARBITRARY_INTEGER_VALUE = 1000000;
+	private HashMap<CityVertex, List<CityVertex>> mCityVertexAdjListMap = null;
+	private HashMap<CityVertex, ArrayList<Path>> mCityPathMap = new HashMap<CityVertex, ArrayList<Path>>();
+	private HashSet<RouteEdge> mSetOfEdges = null;
+	private LinkedHashSet<CityVertex> mSetOfVertex = null;
+	
+	public CityGraph(boolean isDirected) {
+		mIsDirected = isDirected;
+		mCityVertexAdjListMap = new HashMap<CityVertex, List<CityVertex>>();
+		mSetOfEdges = new HashSet<RouteEdge>();
+		mSetOfVertex = new LinkedHashSet<CityVertex>();
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to populate graph
+	 * 
+	 * @param edge
+	 */
+	public void addEdge(int dist, String srcVertex, String destVertex) {
+		if(srcVertex != null &&
+				destVertex != null) {
+			
+			if(getEdgeBetween(srcVertex, destVertex) == null) {
+								
+				// get vertices
+				CityVertex src = getVertex(srcVertex);
+				CityVertex dest = getVertex(destVertex);			
+						
+				// grab src vertex adj list & create if necessary
+				List<CityVertex> adjSrc = mCityVertexAdjListMap.get(src);				
+				if(adjSrc == null) {
+					adjSrc = src.getAdjacentCities();
+				}
+							
+				adjSrc.add(dest);
+				mCityVertexAdjListMap.put(src, adjSrc);
+				
+				// create & add the corresponding edge 
+				RouteEdge routeEdge = new RouteEdge(dist, src, dest);
+				mSetOfEdges.add(routeEdge);
+				
+				// Note: If graph was NOT directed, we had to do the similar operation we did for src vertex 
+			} else {
+				System.out.print("Edge already exists.");
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * Desc: We don't need removal op. Thus we left here empty & private
+	 * 
+	 * @param src
+	 * @param dest
+	 */
+	private void removeEdge(CityVertex src, CityVertex dest) {
+		// left empty
+	}
+	
+	/**
+	 * 
+	 * Desc: Find the edge between two vertices
+	 * 
+	 * @param src
+	 * @param dest
+	 * @return
+	 */
+	public RouteEdge getEdgeBetween(String src, String dest) {
+		RouteEdge edge = null;
+		
+		// iterate over the edge set to find the exact match
+		for(RouteEdge re : mSetOfEdges){
+			if(re.getSrcVertex().getName().equalsIgnoreCase(src) && 
+					re.getDestVertex().getName().equalsIgnoreCase(dest)) {
+				edge = re;
+			}
+		}
+		
+		return edge;
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to check if graph is empty or not
+	 * 
+	 * @return
+	 */
+	public boolean isEmpty() {
+		return (mSetOfEdges.size() == 0);
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to get vertex if exists, or create new one
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public CityVertex getVertex(String name) {
+		
+		CityVertex vertex = null;
+		
+		// iterate over existing vertices to see any match
+		for(CityVertex v : mSetOfVertex) {
+			if(v.getName().equalsIgnoreCase(name)){
+				vertex = v;
+				break;
+			}
+		}
+		
+		// if no match, create & add new one
+		if(vertex == null) {
+			vertex = new CityVertex(name);
+			mSetOfVertex.add(vertex);
+		}
+		
+		return vertex;
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to search graph recursively
+	 * 
+	 * @param curVertex
+	 * @param searchedVertex
+	 * @return
+	 */
+	private HashSet<String> traversed = new HashSet<String>();
+	public boolean DFSearch(CityVertex curVertex, String searchedVertex) {
+		
+		if(curVertex != null) {
+			
+			// add it to traversed set
+			traversed.add(curVertex.getName());
+			
+			// return true if found
+			if(searchedVertex.equalsIgnoreCase(curVertex.getName())){
+				return true;
+			}
+					
+			// iterate over the adjacent items
+			for(CityVertex adjVertex : curVertex.getAdjacentCities()){
+				if(!traversed.contains(adjVertex.getName())) {
+					return DFSearch(adjVertex, searchedVertex);
+				}
+			}
+			
+			return false;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * Desc: Helper method to perform searching. Just to clear hash set prior to search 
+	 * 
+	 * @param curVertex
+	 * @param searchedVertex
+	 */
+	public void searchWithDFS(CityVertex curVertex, String searchedVertex) {
+		traversed.clear();
+		DFSearch(curVertex, searchedVertex);
+	}
+
+	// beware autoboxing here for large number of items ie > 1000	
+	public void findShortestPaths(CityVertex dest) {
+		
+		// create city-shortestdistance & vertexPrev maps
+		final HashMap<String, Integer> cityDistanceMap = new HashMap<String, Integer>(); // real shortest paths
+		final HashMap<String, String> cityPrevMap = new HashMap<String, String>(); // to monitor traces to the shortest path
+		
+		// pick one vertex as a start vertex & start it's distance to 0
+		CityVertex start = mSetOfVertex.iterator().next();
+		cityDistanceMap.put(start.getName(), 0);
+		
+		// create a processing priority queue
+		PriorityQueue<CityVertex> processingQueue = new PriorityQueue<CityVertex>(new Comparator<CityVertex>() {
+
+			public int compare(CityVertex arg0, CityVertex arg1) {
+				//System.out.println("dist of " + arg0.getName() + " is: "+ cityDistanceMap.get(arg0.getName()));
+				//System.out.println("dist of " + arg1.getName() + " is: "+ cityDistanceMap.get(arg1.getName()));
+				
+				return (cityDistanceMap.get(arg0.getName()) - cityDistanceMap.get(arg1.getName()));
+			}
+		});
+				
+		// set their initial distance & previous city. add them into the proc queue 
+		for(CityVertex v : getSetOfVertex()){
+			if(!v.getName().equalsIgnoreCase(start.getName())) {
+				cityDistanceMap.put(v.getName(), MAX_ARBITRARY_INTEGER_VALUE);				
+			}
+			
+			cityPrevMap.put(v.getName(), null);
+			processingQueue.add(v);
+		}		
+											
+		// iterate over the proc queue
+		while(!processingQueue.isEmpty()) {
+			
+			// grab the item with min distance
+			CityVertex srcCity = processingQueue.peek();
+			System.out.println("value from proc queue: " + srcCity.getName());
+			
+			// for each adjacent ciry of src, find all distanced from src 
+			for(CityVertex adjCity : srcCity.getAdjacentCities()){
+				
+				// grab the unique city names
+				String adjCityName = adjCity.getName();
+				String srcCityName = srcCity.getName();
+
+				// calculate the new distance from srcCity to adjCity
+				int value = cityDistanceMap.get(srcCityName) + 
+						getEdgeBetween(srcCityName, adjCityName).getDistance();
+				
+				System.out.println("value bw " + srcCityName + " and " + adjCityName + ": " + getEdgeBetween(srcCityName, adjCityName).getDistance());
+				
+				// check if the value less then most previously saved min value
+				if(value < cityDistanceMap.get(adjCityName)) {
+					
+					cityDistanceMap.put(adjCityName, value);
+					cityPrevMap.put(adjCityName, srcCityName);
+				}
+				
+				//addToPathList(adjCity, cityPrevMap);
+			}
+			
+			processingQueue.poll();
+		}
+		
+		// print out shortest path of given dest
+		System.out.println("Shortest Path to " + dest.getName() + " is: " + cityDistanceMap.get(dest.getName()));
+		System.out.println("Shortest Path to F" + " is: " + cityDistanceMap.get("F"));
+	}
+	
+	/**
+	 * 
+	 * Desc: Method to add paths belong to the dest vertex
+	 * 
+	 * @param dest
+	 * @param cityPrevMap
+	 */
+	private void addToPathList(CityVertex dest, HashMap<String, String> cityPrevMap) {
+		
+		System.out.println("city prev map" + cityPrevMap);
+		
+		// create new path
+		Path path = new Path();		
+		path.createPath(cityPrevMap, dest);
+		
+		System.out.println("path vertex count to " + dest.getName() + ": " + path.nodeList.size());
+		
+		// grab vertex-path list map
+		ArrayList<Path> cityMapList = mCityPathMap.get(dest);
+		if(cityMapList == null) {
+			cityMapList = new ArrayList<Path>();
+		}
+		
+		// add path to the list. update the vertex-path list
+		cityMapList.add(path);
+		mCityPathMap.put(dest, cityMapList);	
+		
+		System.out.println("total path count of " + dest.getName() + ": " + cityMapList.size());
+	}
+	
+	public HashSet<CityVertex> getSetOfVertex() {
+		return mSetOfVertex;
+	}
+
+	public void setSetOfVertex(LinkedHashSet<CityVertex> mSetOfVertex) {
+		this.mSetOfVertex = mSetOfVertex;
+	}
+	
+	
+	public HashSet<RouteEdge> getSetOfEdges() {
+		return mSetOfEdges;
+	}
+
+	public void setSetOfEdges(HashSet<RouteEdge> mSetOfEdges) {
+		this.mSetOfEdges = mSetOfEdges;
+	}
+
+}

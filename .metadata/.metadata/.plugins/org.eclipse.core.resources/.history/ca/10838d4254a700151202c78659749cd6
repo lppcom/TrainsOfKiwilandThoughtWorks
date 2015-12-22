@@ -1,0 +1,86 @@
+package com.kiwilandtrains.test.inputs;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
+import com.kiwilandtrains.core.GraphUtils;
+import com.kiwilandtrains.manager.CityGraphManager;
+
+public class testInputsFromOneToFive extends TestCase {
+
+	// The distance of the route A-B-C.
+	public void testInputOne() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route = "A-B-C";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 9 ", true, (totalLength == 9));
+	}
+	
+	// The distance of the route A-D.
+	public void testInputTwo() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route = "A-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 5 ", true, (totalLength == 5));
+	}
+	
+	// The distance of the route A-D.
+	public void testInputThree() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route = "A-D-C";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 13 ", true, (totalLength == 13));
+	}
+	
+	// The distance of the route A-D-C.
+	public void testInputFour() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route = "A-E-B-C-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 22 ", true, (totalLength == 22));
+	}	
+	
+	// The distance of the route A-E-D. This should return 0 as the length 
+	public void testInputFive() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route = "A-E-D";
+		int totalLength = GraphUtils.calculateDistanceOfRoute(route);
+		
+		assertEquals("Length of path " + route + " is 0 ", true, (totalLength == 0));		
+	}
+	
+	// The number of trips starting at C and ending at C with a maximum of 3 stops.  
+	// In the sample data below, there are two such trips: C-D-C (2 stops). and C-E-B-C (3 stops)
+	public void testInputSix() {
+		String graphData =  "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+		CityGraphManager.getInstance().initGraph(graphData);
+		
+		String route1 = "C-D-C";
+		String route2 = "C-E-B-C";
+		
+		if(GraphUtils.isRouteCyclic(route1) || GraphUtils.isRouteCyclic(route2)) {
+			assertEquals("Route is cyclic " , true, false);
+		} else {
+			assertEquals("", true, (GraphUtils.pathBetweenTwoCitiesWithAnExactNumberOfStops("C", "C", 3) == 3));
+		}
+	}
+	
+	// The distance of the route A-E-D. This should return 0 as the length 
+	public void testInputFive() {
+		
+	}
+}
